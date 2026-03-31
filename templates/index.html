@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astoria White-Label Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy-900: #0a1628;
+            --navy-800: #111d35;
+            --navy-700: #182a47;
+            --navy-600: #1f3659;
+            --slate-400: #8b9bb4;
+            --slate-300: #a8b5c8;
+            --slate-200: #c5cfdd;
+            --white: #f0f2f5;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --green: #22c55e;
+            --green-glow: rgba(34, 197, 94, 0.12);
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.12);
+            --amber: #f59e0b;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--navy-900);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Background texture --- */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 90%, rgba(59,130,246,0.04) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- Layout --- */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* --- Header --- */
+        .header {
+            text-align: center;
+            margin-bottom: 56px;
+            animation: fadeUp 0.6s ease-out;
+        }
+        .header .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--accent-glow);
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 15px;
+            color: var(--slate-400);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* --- Steps --- */
+        .steps {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+            animation: fadeUp 0.6s ease-out 0.1s both;
+        }
+        .step-indicator {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: var(--navy-800);
+            border: 1px solid var(--navy-700);
+            border-radius: var(--radius);
+            transition: all 0.3s ease;
+        }
+        .step-indicator.active {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--navy-800), rgba(59,130,246,0.08));
+        }
+        .step-indicator.done {
+            border-color: var(--green);
+            background: linear-gradient(135deg, var(--navy-800), var(--green-glow));
+        }
+        .step-num {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--navy-700);
+            color: var(--slate-400);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .step-indicator.active .step-num {
+            background: var(--accent);
+            color: #fff;
+        }
+        .step-indicator.done .step-num {
+            background: var(--green);
+            color: #fff;
+        }
+        .step-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--slate-400);
+            transition: color 0.3s ease;
+        }
+        .step-indicator.active .step-label,
+        .step-indicator.done .step-label {
+            color: var(--white);
+        }
+
+        /* --- Cards --- */
+        .card {
+            background: var(--navy-800);
+            border: 1px solid var(--navy-700);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 24px;
+            animation: fadeUp 0.6s ease-out 0.2s both;
+            transition: border-color 0.3s ease;
+        }
+        .card:hover { border-color: var(--navy-600); }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--slate-400);
+            margin-bottom: 24px;
+        }
+
+        /* --- Drop zones --- */
+        .dropzone {
+            border: 2px dashed var(--navy-600);
+            border-radius: var(--radius);
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+        .dropzone:hover,
+        .dropzone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+        .dropzone-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            background: var(--navy-700);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dropzone-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--accent);
+        }
+        .dropzone-text {
+            font-size: 14px;
+            color: var(--slate-300);
+            margin-bottom: 4px;
+        }
+        .dropzone-text span {
+            color: var(--accent);
+            font-weight: 500;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        .dropzone-hint {
+            font-size: 12px;
+            color: var(--slate-400);
+        }
+        .dropzone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* --- File uploaded state --- */
+        .file-uploaded {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--navy-700);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        .file-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--green-glow);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .file-icon svg { width: 20px; height: 20px; stroke: var(--green); }
+        .file-info { flex: 1; min-width: 0; }
+        .file-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--white);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .file-meta {
+            font-size: 12px;
+            color: var(--slate-400);
+            margin-top: 2px;
+        }
+        .file-remove {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: var(--slate-400);
+            transition: color 0.2s;
+        }
+        .file-remove:hover { color: var(--red); }
+
+        /* --- Logo grid --- */
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .logo-item {
+            background: var(--navy-700);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            text-align: center;
+            position: relative;
+            animation: popIn 0.3s ease-out;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .logo-item:hover { border-color: var(--navy-600); }
+        .logo-item img {
+            max-width: 100%;
+            max-height: 60px;
+            object-fit: contain;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        .logo-item .logo-name {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--slate-300);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .logo-item .logo-remove {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--navy-900);
+            border: 1px solid var(--navy-600);
+            color: var(--slate-400);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+        .logo-item:hover .logo-remove { opacity: 1; }
+        .logo-item .logo-remove:hover {
+            background: var(--red);
+            border-color: var(--red);
+            color: #fff;
+        }
+
+        .logo-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 16px;
+        }
+        .logo-count {
+            font-size: 13px;
+            color: var(--slate-400);
+            flex: 1;
+        }
+        .logo-count strong {
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn svg { width: 16px; height: 16px; }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+        .btn-primary:disabled {
+            background: var(--navy-600);
+            color: var(--slate-400);
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-ghost {
+            background: transparent;
+            color: var(--slate-400);
+            border: 1px solid var(--navy-600);
+        }
+        .btn-ghost:hover { color: var(--white); border-color: var(--slate-300); }
+        .btn-success {
+            background: var(--green);
+            color: #fff;
+        }
+        .btn-success:hover { background: #16a34a; transform: translateY(-1px); }
+
+        .generate-section {
+            animation: fadeUp 0.6s ease-out 0.3s both;
+        }
+        .generate-btn-wrap {
+            display: flex;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .btn-generate {
+            padding: 16px 48px;
+            font-size: 15px;
+            border-radius: var(--radius);
+            letter-spacing: 0.3px;
+        }
+
+        /* --- Progress / Results --- */
+        .progress-section {
+            display: none;
+            text-align: center;
+            padding: 40px 0;
+        }
+        .progress-section.visible { display: block; }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--navy-700);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        .progress-text {
+            font-size: 14px;
+            color: var(--slate-300);
+        }
+        .progress-sub {
+            font-size: 12px;
+            color: var(--slate-400);
+            margin-top: 4px;
+        }
+
+        .results-section {
+            display: none;
+            animation: fadeUp 0.4s ease-out;
+        }
+        .results-section.visible { display: block; }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .results-header h3 { font-size: 18px; font-weight: 600; }
+        .results-summary {
+            font-size: 13px;
+            color: var(--slate-400);
+        }
+        .results-summary .count-success { color: var(--green); font-weight: 600; }
+        .results-summary .count-error { color: var(--red); font-weight: 600; }
+
+        .result-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+        .result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--navy-700);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+        }
+        .result-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .result-dot.success { background: var(--green); }
+        .result-dot.error { background: var(--red); }
+        .result-client { flex: 1; font-weight: 500; }
+        .result-file {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--slate-400);
+        }
+        .result-error-msg {
+            font-size: 11px;
+            color: var(--red);
+        }
+
+        .download-wrap {
+            display: flex;
+            justify-content: center;
+        }
+        .btn-download {
+            padding: 16px 48px;
+            font-size: 15px;
+            border-radius: var(--radius);
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 640px) {
+            .steps { flex-direction: column; }
+            .logo-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+            .container { padding: 32px 16px 64px; }
+            .header h1 { font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="badge">Internal Tool</div>
+            <h1>White-Label Generator</h1>
+            <p>Upload the monthly commentary and client logos. Get branded PDFs for every client in one click.</p>
+        </div>
+
+        <!-- Step indicators -->
+        <div class="steps">
+            <div class="step-indicator active" id="step1-ind">
+                <div class="step-num">1</div>
+                <div class="step-label">Upload Commentary</div>
+            </div>
+            <div class="step-indicator" id="step2-ind">
+                <div class="step-num">2</div>
+                <div class="step-label">Import Logos</div>
+            </div>
+            <div class="step-indicator" id="step3-ind">
+                <div class="step-num">3</div>
+                <div class="step-label">Generate PDFs</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Commentary upload -->
+        <div class="card" id="card-commentary">
+            <div class="card-title">Monthly Commentary</div>
+            <div class="card-subtitle">Upload the Astoria commentary DOCX for this month</div>
+
+            <div id="commentary-dropzone" class="dropzone">
+                <div class="dropzone-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                </div>
+                <div class="dropzone-text">Drag & drop your <span>.docx</span> file here</div>
+                <div class="dropzone-hint">or click to browse</div>
+                <input type="file" accept=".docx" id="commentary-input">
+            </div>
+
+            <div id="commentary-uploaded" class="file-uploaded" style="display:none;">
+                <div class="file-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                </div>
+                <div class="file-info">
+                    <div class="file-name" id="commentary-filename"></div>
+                    <div class="file-meta" id="commentary-meta"></div>
+                </div>
+                <button class="file-remove" id="commentary-remove" title="Remove">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Logos upload -->
+        <div class="card" id="card-logos">
+            <div class="card-title">Client Logos</div>
+            <div class="card-subtitle">Import up to 50 client logos — one PDF per logo</div>
+
+            <div id="logos-dropzone" class="dropzone">
+                <div class="dropzone-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                    </svg>
+                </div>
+                <div class="dropzone-text">Drag & drop <span>logo images</span> here</div>
+                <div class="dropzone-hint">PNG, JPG, BMP, WEBP — select multiple files</div>
+                <input type="file" accept="image/*" multiple id="logos-input">
+            </div>
+
+            <div id="logos-grid" class="logo-grid"></div>
+
+            <div id="logos-actions" class="logo-actions" style="display:none;">
+                <div class="logo-count"><strong id="logo-count-num">0</strong> client logos loaded</div>
+                <button class="btn btn-ghost" id="logos-add-more">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Add More
+                </button>
+                <button class="btn btn-ghost" id="logos-clear" style="border-color: var(--red); color: var(--red);">Clear All</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Generate -->
+        <div class="generate-section" id="generate-section">
+            <div class="generate-btn-wrap">
+                <button class="btn btn-primary btn-generate" id="btn-generate" disabled>
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                    Generate All PDFs
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="card progress-section" id="progress-section">
+            <div class="spinner"></div>
+            <div class="progress-text">Generating branded PDFs...</div>
+            <div class="progress-sub" id="progress-sub">This may take a minute for 20+ logos</div>
+        </div>
+
+        <!-- Results -->
+        <div class="card results-section" id="results-section">
+            <div class="results-header">
+                <h3>Complete</h3>
+                <div class="results-summary" id="results-summary"></div>
+            </div>
+            <div class="result-list" id="result-list"></div>
+            <div class="download-wrap">
+                <button class="btn btn-success btn-download" id="btn-download">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    Download All PDFs (.zip)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== State ==========
+        let commentaryUploaded = false;
+        let logos = []; // { filename, client_name, objectUrl }
+        let zipFilename = null;
+
+        // ========== Elements ==========
+        const $ = (s) => document.querySelector(s);
+        const commentaryDropzone = $('#commentary-dropzone');
+        const commentaryInput = $('#commentary-input');
+        const commentaryUploaded_el = $('#commentary-uploaded');
+        const logosDropzone = $('#logos-dropzone');
+        const logosInput = $('#logos-input');
+        const logosGrid = $('#logos-grid');
+        const logosActions = $('#logos-actions');
+        const btnGenerate = $('#btn-generate');
+        const progressSection = $('#progress-section');
+        const resultsSection = $('#results-section');
+
+        // ========== Step indicators ==========
+        function updateSteps() {
+            const s1 = $('#step1-ind'), s2 = $('#step2-ind'), s3 = $('#step3-ind');
+            s1.className = 'step-indicator ' + (commentaryUploaded ? 'done' : 'active');
+            s2.className = 'step-indicator ' + (logos.length > 0 ? 'done' : (commentaryUploaded ? 'active' : ''));
+            s3.className = 'step-indicator ' + (commentaryUploaded && logos.length > 0 ? 'active' : '');
+            btnGenerate.disabled = !(commentaryUploaded && logos.length > 0);
+        }
+
+        // ========== Dropzone helpers ==========
+        function setupDropzone(zone, handler) {
+            ['dragenter', 'dragover'].forEach(evt => {
+                zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove('dragover'); });
+            });
+            zone.addEventListener('drop', (e) => handler(e.dataTransfer.files));
+        }
+
+        // ========== Commentary Upload ==========
+        setupDropzone(commentaryDropzone, handleCommentaryFiles);
+        commentaryInput.addEventListener('change', () => handleCommentaryFiles(commentaryInput.files));
+
+        async function handleCommentaryFiles(files) {
+            if (!files.length) return;
+            const file = files[0];
+            if (!file.name.endsWith('.docx')) {
+                alert('Please upload a .docx file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                commentaryDropzone.querySelector('.dropzone-text').textContent = 'Uploading...';
+                const resp = await fetch('/api/upload-commentary', { method: 'POST', body: formData });
+                const data = await resp.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    commentaryDropzone.querySelector('.dropzone-text').innerHTML = 'Drag & drop your <span>.docx</span> file here';
+                    return;
+                }
+
+                // Show uploaded state
+                commentaryDropzone.style.display = 'none';
+                commentaryUploaded_el.style.display = 'flex';
+                $('#commentary-filename').textContent = data.filename;
+                const meta = [data.month, data.year, 'Logo detected'].filter(Boolean).join(' · ');
+                $('#commentary-meta').textContent = meta;
+                commentaryUploaded = true;
+                updateSteps();
+            } catch (err) {
+                alert('Upload failed: ' + err.message);
+                commentaryDropzone.querySelector('.dropzone-text').innerHTML = 'Drag & drop your <span>.docx</span> file here';
+            }
+        }
+
+        // Remove commentary
+        $('#commentary-remove').addEventListener('click', () => {
+            commentaryDropzone.style.display = '';
+            commentaryDropzone.querySelector('.dropzone-text').innerHTML = 'Drag & drop your <span>.docx</span> file here';
+            commentaryUploaded_el.style.display = 'none';
+            commentaryInput.value = '';
+            commentaryUploaded = false;
+            updateSteps();
+        });
+
+        // ========== Logos Upload ==========
+        setupDropzone(logosDropzone, handleLogoFiles);
+        logosInput.addEventListener('change', () => handleLogoFiles(logosInput.files));
+        $('#logos-add-more').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.multiple = true;
+            input.onchange = () => handleLogoFiles(input.files);
+            input.click();
+        });
+
+        async function handleLogoFiles(files) {
+            if (!files.length) return;
+
+            const formData = new FormData();
+            Array.from(files).forEach(f => formData.append('files', f));
+
+            try {
+                const resp = await fetch('/api/upload-logos', { method: 'POST', body: formData });
+                const data = await resp.json();
+
+                if (data.error) { alert(data.error); return; }
+
+                // Create object URLs for preview
+                const fileArray = Array.from(files);
+                data.logos.forEach((logo, i) => {
+                    // Find matching file by name
+                    const matchedFile = fileArray.find(f => {
+                        // secure_filename replaces spaces with underscores etc
+                        return f.name === logo.filename || f.name.replace(/[^a-zA-Z0-9._-]/g, '_') === logo.filename;
+                    }) || fileArray[i];
+
+                    if (matchedFile) {
+                        logo.objectUrl = URL.createObjectURL(matchedFile);
+                    }
+                    logos.push(logo);
+                });
+
+                renderLogos();
+                updateSteps();
+            } catch (err) {
+                alert('Upload failed: ' + err.message);
+            }
+        }
+
+        function renderLogos() {
+            logosGrid.innerHTML = '';
+            logos.forEach((logo, idx) => {
+                const div = document.createElement('div');
+                div.className = 'logo-item';
+                div.innerHTML = `
+                    ${logo.objectUrl ? `<img src="${logo.objectUrl}" alt="${logo.client_name}">` : '<div style="height:60px;display:flex;align-items:center;justify-content:center;color:var(--slate-400);font-size:11px;">No preview</div>'}
+                    <div class="logo-name" title="${logo.client_name}">${logo.client_name}</div>
+                    <button class="logo-remove" data-idx="${idx}" title="Remove">&times;</button>
+                `;
+                logosGrid.appendChild(div);
+            });
+
+            // Remove buttons
+            logosGrid.querySelectorAll('.logo-remove').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    const logo = logos[idx];
+                    await fetch('/api/remove-logo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: logo.filename }),
+                    });
+                    if (logo.objectUrl) URL.revokeObjectURL(logo.objectUrl);
+                    logos.splice(idx, 1);
+                    renderLogos();
+                    updateSteps();
+                });
+            });
+
+            logosActions.style.display = logos.length > 0 ? 'flex' : 'none';
+            $('#logo-count-num').textContent = logos.length;
+        }
+
+        // Clear all logos
+        $('#logos-clear').addEventListener('click', async () => {
+            await fetch('/api/clear-logos', { method: 'POST' });
+            logos.forEach(l => { if (l.objectUrl) URL.revokeObjectURL(l.objectUrl); });
+            logos = [];
+            renderLogos();
+            logosInput.value = '';
+            updateSteps();
+        });
+
+        // ========== Generate ==========
+        btnGenerate.addEventListener('click', async () => {
+            btnGenerate.disabled = true;
+            progressSection.classList.add('visible');
+            resultsSection.classList.remove('visible');
+            $('#progress-sub').textContent = `Processing ${logos.length} client logos — this may take a minute...`;
+
+            try {
+                const resp = await fetch('/api/generate', { method: 'POST' });
+                const data = await resp.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    btnGenerate.disabled = false;
+                    progressSection.classList.remove('visible');
+                    return;
+                }
+
+                // Show results
+                progressSection.classList.remove('visible');
+                resultsSection.classList.add('visible');
+
+                const summary = data.summary;
+                let summaryHTML = `<span class="count-success">${summary.success} succeeded</span>`;
+                if (summary.errors > 0) summaryHTML += ` · <span class="count-error">${summary.errors} failed</span>`;
+                $('#results-summary').innerHTML = summaryHTML;
+
+                const listEl = $('#result-list');
+                listEl.innerHTML = '';
+                data.results.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    if (r.status === 'success') {
+                        div.innerHTML = `
+                            <div class="result-dot success"></div>
+                            <div class="result-client">${r.client}</div>
+                            <div class="result-file">${r.filename}</div>
+                        `;
+                    } else {
+                        div.innerHTML = `
+                            <div class="result-dot error"></div>
+                            <div class="result-client">${r.client}</div>
+                            <div class="result-error-msg">${r.error}</div>
+                        `;
+                    }
+                    listEl.appendChild(div);
+                });
+
+                zipFilename = data.zip_filename;
+                $('#step3-ind').className = 'step-indicator done';
+
+            } catch (err) {
+                alert('Generation failed: ' + err.message);
+                progressSection.classList.remove('visible');
+                btnGenerate.disabled = false;
+            }
+        });
+
+        // ========== Download ==========
+        $('#btn-download').addEventListener('click', () => {
+            if (zipFilename) {
+                window.location.href = `/api/download?file=${encodeURIComponent(zipFilename)}`;
+            }
+        });
+
+        // Init
+        updateSteps();
+    </script>
+</body>
+</html>
