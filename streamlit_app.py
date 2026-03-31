@@ -13,6 +13,7 @@ import re
 import shutil
 import tempfile
 import zipfile
+import base64
 from pathlib import Path
 from datetime import datetime
 
@@ -44,139 +45,59 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 
-    /* Global */
-    .stApp {
-        font-family: 'DM Sans', sans-serif;
-    }
+    .stApp { font-family: 'DM Sans', sans-serif; }
 
-    /* Header */
-    .app-header {
-        text-align: center;
-        padding: 1.5rem 0 2rem;
-    }
+    .app-header { text-align: center; padding: 1.5rem 0 2rem; }
     .app-badge {
-        display: inline-block;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        color: #3b82f6;
-        background: rgba(59, 130, 246, 0.12);
-        padding: 5px 14px;
-        border-radius: 100px;
-        margin-bottom: 12px;
+        display: inline-block; font-size: 11px; font-weight: 600;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        color: #3b82f6; background: rgba(59, 130, 246, 0.12);
+        padding: 5px 14px; border-radius: 100px; margin-bottom: 12px;
     }
-    .app-title {
-        font-size: 28px;
-        font-weight: 700;
-        margin: 0 0 8px;
-        letter-spacing: -0.3px;
-    }
-    .app-subtitle {
-        font-size: 14px;
-        opacity: 0.6;
-        max-width: 450px;
-        margin: 0 auto;
-        line-height: 1.6;
-    }
+    .app-title { font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.3px; }
+    .app-subtitle { font-size: 14px; opacity: 0.6; max-width: 450px; margin: 0 auto; line-height: 1.6; }
 
-    /* Section headers */
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 4px;
-    }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
     .section-num {
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        font-size: 13px;
-        font-weight: 600;
-        background: #3b82f6;
-        color: white;
-        flex-shrink: 0;
+        width: 28px; height: 28px; display: flex; align-items: center;
+        justify-content: center; border-radius: 50%; font-size: 13px;
+        font-weight: 600; background: #3b82f6; color: white; flex-shrink: 0;
     }
-    .section-num.done {
-        background: #22c55e;
-    }
-    .section-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0;
-    }
-    .section-sub {
-        font-size: 13px;
-        opacity: 0.5;
-        margin: 0 0 16px 40px;
-    }
+    .section-num.done { background: #22c55e; }
+    .section-title { font-size: 16px; font-weight: 600; margin: 0; }
+    .section-sub { font-size: 13px; opacity: 0.5; margin: 0 0 16px 40px; }
 
-    /* Logo grid */
     .logo-grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 10px;
-        margin: 12px 0;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px; margin: 12px 0;
     }
     .logo-card {
-        background: rgba(128, 128, 128, 0.08);
-        border-radius: 10px;
-        padding: 12px 8px 10px;
-        text-align: center;
+        background: rgba(128, 128, 128, 0.08); border-radius: 10px;
+        padding: 12px 8px 10px; text-align: center;
         border: 1px solid rgba(128, 128, 128, 0.12);
     }
-    .logo-card img {
-        max-height: 45px;
-        max-width: 100%;
-        object-fit: contain;
-        margin-bottom: 6px;
-    }
+    .logo-card img { max-height: 45px; max-width: 100%; object-fit: contain; margin-bottom: 6px; }
     .logo-card .logo-label {
-        font-size: 11px;
-        font-weight: 500;
-        opacity: 0.7;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 11px; font-weight: 500; opacity: 0.7;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* Result rows */
     .result-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        background: rgba(128, 128, 128, 0.06);
-        border-radius: 8px;
-        margin-bottom: 6px;
-        font-size: 13px;
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; background: rgba(128, 128, 128, 0.06);
+        border-radius: 8px; margin-bottom: 6px; font-size: 13px;
     }
-    .result-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
+    .result-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .result-dot.success { background: #22c55e; }
     .result-dot.error { background: #ef4444; }
     .result-name { font-weight: 500; flex: 1; }
     .result-file { font-size: 11px; opacity: 0.5; font-family: monospace; }
     .result-error { font-size: 11px; color: #ef4444; }
 
-    /* Hide default Streamlit elements */
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
     header { visibility: hidden; }
-
-    /* Divider */
-    .custom-divider {
-        height: 1px;
-        background: rgba(128, 128, 128, 0.15);
-        margin: 28px 0;
-    }
+    .custom-divider { height: 1px; background: rgba(128, 128, 128, 0.15); margin: 28px 0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -194,26 +115,29 @@ st.markdown("""
 
 
 # ───────────────────────────────────────────
-# Session State
+# Session State — store raw BYTES, not file objects
+# (file objects die on rerun in Streamlit Cloud)
 # ───────────────────────────────────────────
-if "commentary_file" not in st.session_state:
-    st.session_state.commentary_file = None
+if "commentary_bytes" not in st.session_state:
+    st.session_state.commentary_bytes = None
 if "commentary_info" not in st.session_state:
     st.session_state.commentary_info = None
-if "logo_files" not in st.session_state:
-    st.session_state.logo_files = {}
+if "logo_data" not in st.session_state:
+    st.session_state.logo_data = {}  # {filename: {"bytes": b"...", "client_name": "..."}}
 if "results" not in st.session_state:
     st.session_state.results = None
 if "zip_data" not in st.session_state:
     st.session_state.zip_data = None
 if "zip_name" not in st.session_state:
     st.session_state.zip_name = None
+if "generation_error" not in st.session_state:
+    st.session_state.generation_error = None
 
 
 # ───────────────────────────────────────────
 # Step 1: Upload Commentary
 # ───────────────────────────────────────────
-commentary_done = st.session_state.commentary_file is not None
+commentary_done = st.session_state.commentary_bytes is not None
 num_class_1 = "done" if commentary_done else ""
 
 st.markdown(f"""
@@ -231,48 +155,53 @@ uploaded_docx = st.file_uploader(
     label_visibility="collapsed",
 )
 
-if uploaded_docx is not None and (
-    st.session_state.commentary_file is None
-    or st.session_state.commentary_file.name != uploaded_docx.name
-):
-    # Validate the DOCX
-    tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
-    tmp.write(uploaded_docx.read())
-    tmp.close()
+# Process and store as bytes
+if uploaded_docx is not None:
+    new_bytes = uploaded_docx.read()
     uploaded_docx.seek(0)
 
-    try:
-        from docx import Document
-        doc = Document(tmp.name)
-        rel_id, target = find_logo_image(doc)
+    # Only re-process if file changed
+    if (
+        st.session_state.commentary_bytes is None
+        or st.session_state.commentary_info is None
+        or st.session_state.commentary_info.get("filename") != uploaded_docx.name
+    ):
+        tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
+        tmp.write(new_bytes)
+        tmp.close()
 
-        month_match = re.search(
-            r'(January|February|March|April|May|June|July|August|September|October|November|December)',
-            uploaded_docx.name, re.IGNORECASE,
-        )
-        year_match = re.search(r'(20\d{2})', uploaded_docx.name)
+        try:
+            from docx import Document
+            doc = Document(tmp.name)
+            rel_id, target = find_logo_image(doc)
 
-        st.session_state.commentary_file = uploaded_docx
-        st.session_state.commentary_info = {
-            "filename": uploaded_docx.name,
-            "month": month_match.group(1) if month_match else datetime.now().strftime("%B"),
-            "year": year_match.group(1) if year_match else str(datetime.now().year),
-            "logo_target": target,
-            "tmp_path": tmp.name,
-        }
-        # Reset results when new file uploaded
-        st.session_state.results = None
-        st.session_state.zip_data = None
-    except Exception as e:
-        st.error(f"Could not process DOCX: {e}")
-    finally:
-        pass
+            month_match = re.search(
+                r'(January|February|March|April|May|June|July|August|September|October|November|December)',
+                uploaded_docx.name, re.IGNORECASE,
+            )
+            year_match = re.search(r'(20\d{2})', uploaded_docx.name)
+
+            st.session_state.commentary_bytes = new_bytes
+            st.session_state.commentary_info = {
+                "filename": uploaded_docx.name,
+                "month": month_match.group(1) if month_match else datetime.now().strftime("%B"),
+                "year": year_match.group(1) if year_match else str(datetime.now().year),
+                "logo_target": target,
+            }
+            st.session_state.results = None
+            st.session_state.zip_data = None
+            st.session_state.generation_error = None
+        except Exception as e:
+            st.error(f"Could not process DOCX: {e}")
+        finally:
+            try:
+                os.unlink(tmp.name)
+            except Exception:
+                pass
 
 if st.session_state.commentary_info:
     info = st.session_state.commentary_info
-    st.success(
-        f"**{info['filename']}** — {info['month']} {info['year']} · Logo detected"
-    )
+    st.success(f"**{info['filename']}** — {info['month']} {info['year']} · Logo detected")
 
 
 st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
@@ -281,7 +210,7 @@ st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
 # ───────────────────────────────────────────
 # Step 2: Upload Logos
 # ───────────────────────────────────────────
-logos_done = len(st.session_state.logo_files) > 0
+logos_done = len(st.session_state.logo_data) > 0
 num_class_2 = "done" if logos_done else ""
 
 st.markdown(f"""
@@ -300,34 +229,30 @@ uploaded_logos = st.file_uploader(
     label_visibility="collapsed",
 )
 
-# Process newly uploaded logos
+# Store logo BYTES in session state (not file objects)
 if uploaded_logos:
     for logo_file in uploaded_logos:
-        if logo_file.name not in st.session_state.logo_files:
-            st.session_state.logo_files[logo_file.name] = {
-                "file": logo_file,
+        if logo_file.name not in st.session_state.logo_data:
+            logo_bytes = logo_file.read()
+            logo_file.seek(0)
+            st.session_state.logo_data[logo_file.name] = {
+                "bytes": logo_bytes,
                 "client_name": get_client_name_from_logo(logo_file.name),
             }
-    # Reset results when logos change
     if st.session_state.results is not None:
         st.session_state.results = None
         st.session_state.zip_data = None
 
 # Display logo grid
-if st.session_state.logo_files:
-    logo_items = list(st.session_state.logo_files.items())
-
-    # Build grid HTML with base64 thumbnails
-    import base64
+if st.session_state.logo_data:
+    logo_items = list(st.session_state.logo_data.items())
 
     grid_html = '<div class="logo-grid-container">'
     for filename, data in logo_items:
         try:
-            data["file"].seek(0)
-            img_bytes = data["file"].read()
-            b64 = base64.b64encode(img_bytes).decode()
+            b64 = base64.b64encode(data["bytes"]).decode()
             ext = Path(filename).suffix.lower().replace(".", "")
-            mime = f"image/{'jpeg' if ext in ('jpg','jpeg') else ext}"
+            mime = f"image/{'jpeg' if ext in ('jpg', 'jpeg') else ext}"
             img_tag = f'<img src="data:{mime};base64,{b64}" />'
         except Exception:
             img_tag = '<div style="height:45px;display:flex;align-items:center;justify-content:center;opacity:0.4;font-size:11px;">No preview</div>'
@@ -344,7 +269,7 @@ if st.session_state.logo_files:
     st.caption(f"**{len(logo_items)}** client logos loaded")
 
     if st.button("Clear All Logos", type="secondary"):
-        st.session_state.logo_files = {}
+        st.session_state.logo_data = {}
         st.session_state.results = None
         st.session_state.zip_data = None
         st.rerun()
@@ -357,8 +282,8 @@ st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
 # Step 3: Generate
 # ───────────────────────────────────────────
 can_generate = (
-    st.session_state.commentary_info is not None
-    and len(st.session_state.logo_files) > 0
+    st.session_state.commentary_bytes is not None
+    and len(st.session_state.logo_data) > 0
 )
 
 num_class_3 = "done" if st.session_state.results else ""
@@ -369,6 +294,10 @@ st.markdown(f"""
 </div>
 <p class="section-sub">One PDF per client with their logo replacing the Astoria logo</p>
 """, unsafe_allow_html=True)
+
+# Show any previous generation errors
+if st.session_state.generation_error:
+    st.error(f"Last generation error: {st.session_state.generation_error}")
 
 if not can_generate:
     st.info("Upload a commentary DOCX and at least one client logo to get started.")
@@ -383,78 +312,99 @@ if can_generate and st.session_state.results is None:
         )
 
     if generate_clicked:
+        st.session_state.generation_error = None
         info = st.session_state.commentary_info
-        logo_items = list(st.session_state.logo_files.items())
+        logo_items = list(st.session_state.logo_data.items())
 
         results = []
         output_dir = tempfile.mkdtemp(prefix="astoria_output_")
         tmp_dir = tempfile.mkdtemp(prefix="astoria_tmp_")
 
-        # Save commentary to temp file (re-save from buffer)
-        commentary_tmp = os.path.join(tmp_dir, "commentary.docx")
-        st.session_state.commentary_file.seek(0)
-        with open(commentary_tmp, "wb") as f:
-            f.write(st.session_state.commentary_file.read())
+        try:
+            # Write commentary bytes to temp file
+            commentary_tmp = os.path.join(tmp_dir, "commentary.docx")
+            with open(commentary_tmp, "wb") as f:
+                f.write(st.session_state.commentary_bytes)
 
-        progress_bar = st.progress(0, text="Starting...")
-        total = len(logo_items)
-
-        for i, (filename, data) in enumerate(logo_items):
-            client_name = data["client_name"]
-            base_name = f"{info['month']}_{info['year']}_Monthly_Commentary_Report_{client_name.replace(' ', '_')}"
-
-            progress_bar.progress(
-                (i) / total,
-                text=f"Processing {client_name} ({i+1}/{total})...",
-            )
-
+            # Check LibreOffice
+            import subprocess
             try:
-                # Save logo to temp
-                logo_tmp = os.path.join(tmp_dir, filename)
-                data["file"].seek(0)
-                with open(logo_tmp, "wb") as f:
-                    f.write(data["file"].read())
+                lo_check = subprocess.run(
+                    ["libreoffice", "--version"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                st.write(f"LibreOffice: {lo_check.stdout.strip()}")
+            except FileNotFoundError:
+                st.error(
+                    "LibreOffice is not installed. Make sure `packages.txt` contains `libreoffice` "
+                    "and redeploy the app."
+                )
+                st.stop()
 
-                # Replace logo
-                docx_output = os.path.join(tmp_dir, f"{base_name}.docx")
-                replace_logo_in_docx(commentary_tmp, logo_tmp, docx_output)
+            progress_bar = st.progress(0, text="Starting...")
+            total = len(logo_items)
 
-                # Convert to PDF
-                pdf_path = convert_docx_to_pdf(docx_output, output_dir)
+            for i, (filename, data) in enumerate(logo_items):
+                client_name = data["client_name"]
+                base_name = f"{info['month']}_{info['year']}_Monthly_Commentary_Report_{client_name.replace(' ', '_')}"
 
-                results.append({
-                    "client": client_name,
-                    "filename": os.path.basename(pdf_path),
-                    "pdf_path": pdf_path,
-                    "status": "success",
-                })
-            except Exception as e:
-                results.append({
-                    "client": client_name,
-                    "status": "error",
-                    "error": str(e),
-                })
+                progress_bar.progress(
+                    (i) / total,
+                    text=f"Processing {client_name} ({i + 1}/{total})...",
+                )
 
-        progress_bar.progress(1.0, text="Complete!")
+                try:
+                    # Write logo bytes to temp file
+                    logo_tmp = os.path.join(tmp_dir, filename)
+                    with open(logo_tmp, "wb") as f:
+                        f.write(data["bytes"])
 
-        # Create ZIP
-        zip_buffer = io.BytesIO()
-        zip_name = f"{info['month']}_{info['year']}_Monthly_Commentary_All_Clients.zip"
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-            for r in results:
-                if r["status"] == "success":
-                    zf.write(r["pdf_path"], r["filename"])
-        zip_buffer.seek(0)
+                    # Replace logo in DOCX
+                    docx_output = os.path.join(tmp_dir, f"{base_name}.docx")
+                    replace_logo_in_docx(commentary_tmp, logo_tmp, docx_output)
 
-        st.session_state.results = results
-        st.session_state.zip_data = zip_buffer.getvalue()
-        st.session_state.zip_name = zip_name
+                    # Convert to PDF
+                    pdf_path = convert_docx_to_pdf(docx_output, output_dir)
 
-        # Cleanup
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-        shutil.rmtree(output_dir, ignore_errors=True)
+                    results.append({
+                        "client": client_name,
+                        "filename": os.path.basename(pdf_path),
+                        "pdf_path": pdf_path,
+                        "status": "success",
+                    })
+                except Exception as e:
+                    results.append({
+                        "client": client_name,
+                        "status": "error",
+                        "error": str(e),
+                    })
 
-        st.rerun()
+            progress_bar.progress(1.0, text="Complete!")
+
+            # Create ZIP
+            zip_buffer = io.BytesIO()
+            zip_name = f"{info['month']}_{info['year']}_Monthly_Commentary_All_Clients.zip"
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+                for r in results:
+                    if r["status"] == "success" and os.path.exists(r["pdf_path"]):
+                        zf.write(r["pdf_path"], r["filename"])
+            zip_buffer.seek(0)
+
+            st.session_state.results = results
+            st.session_state.zip_data = zip_buffer.getvalue()
+            st.session_state.zip_name = zip_name
+
+        except Exception as e:
+            st.session_state.generation_error = str(e)
+            st.error(f"Generation failed: {e}")
+            import traceback
+            st.code(traceback.format_exc())
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            shutil.rmtree(output_dir, ignore_errors=True)
+
+        if st.session_state.results:
+            st.rerun()
 
 
 # ───────────────────────────────────────────
@@ -465,13 +415,11 @@ if st.session_state.results:
     success_count = sum(1 for r in results if r["status"] == "success")
     error_count = sum(1 for r in results if r["status"] == "error")
 
-    # Summary
     if error_count == 0:
         st.success(f"All **{success_count}** branded PDFs generated successfully!")
     else:
         st.warning(f"**{success_count}** succeeded · **{error_count}** failed")
 
-    # Result list
     results_html = ""
     for r in results:
         if r["status"] == "success":
@@ -494,22 +442,22 @@ if st.session_state.results:
 
     st.markdown("")
 
-    # Download button
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.download_button(
-            label="📥 Download All PDFs (.zip)",
-            data=st.session_state.zip_data,
-            file_name=st.session_state.zip_name,
-            mime="application/zip",
-            type="primary",
-            use_container_width=True,
-        )
+    if st.session_state.zip_data:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.download_button(
+                label="📥 Download All PDFs (.zip)",
+                data=st.session_state.zip_data,
+                file_name=st.session_state.zip_name,
+                mime="application/zip",
+                type="primary",
+                use_container_width=True,
+            )
 
-    # Option to re-generate
     st.markdown("")
     if st.button("↻ Start Over", type="secondary"):
         st.session_state.results = None
         st.session_state.zip_data = None
         st.session_state.zip_name = None
+        st.session_state.generation_error = None
         st.rerun()
